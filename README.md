@@ -1,2 +1,1 @@
-# Library
-OPP and DOM manipulation
+v1.1
