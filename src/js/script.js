@@ -21,7 +21,7 @@ function render() {
 
 //Dodaj pusą tablicę na ulubione książki
 const favoriteBooks = [];
-console.log(favoriteBooks);
+console.log('FavoriteBooks:', favoriteBooks);
 
 //Dodaj nową funckję initActions
 function initActions(){
