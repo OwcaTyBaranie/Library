@@ -16,17 +16,59 @@ console.log('FilteredBooks:', filters);
 function render() {
   // Przejdź po każdym elemencie z dataSource.books
   dataSource.books.forEach(book => {
+    // Przygotuj stałą ratingBgc
+    const ratingBgc = determineRatingBgc(book.rating);
+    // Przygotuj stałą ratingWidth
+    const ratingWidth = book.rating * 10; // przeliczenie na procenty
+    // Sprawdź, czy książka znajduje się na liście ulubionych
+    const isFavorite = favoriteBooks.includes(book.id);
+    // Sprawdź, czy książka jest filtrowana
+    let isFiltered = false;
+    for (const filter of filters) {
+      if (!book.details[filter]) {
+        isFiltered = true;
+        break;
+      }
+    }
+
     // Wygeneruj kod HTML na podstawie szablonu oraz danych o konkretnej książce
-    const generatedHTML = bookTemplate(book);
-    // Wygenerowany element DOM
-    const bookElement = utils.createDOMFromHTML(generatedHTML);
-    // Dołącz wygenerowany element DOM jako nowe dziecko DOM do listy .books-list
-    booksListContainer.appendChild(bookElement);
+    const bookData = {
+      id: book.id,
+      title: book.title,
+      price: book.price,
+      image: book.image,
+      rating: book.rating,
+      ratingWidth: ratingWidth,
+      ratingBgc: ratingBgc
+    };
+
+    // Utwórz element DOM na podstawie szablonu i danych książki
+    const bookHTML = bookTemplate(bookData);
+    // Dodaj wygenerowany element do listy książek
+    const booksList = document.querySelector('.books-list');
+    booksList.insertAdjacentHTML('beforeend', bookHTML);
   });
 }
 
 
 
+
+function determineRatingBgc(rating){
+  const backgroundRating1 = 'linear-gradient(to bottom,  #fefcea 0%, #f1da36 100%)';// Rating < 6
+  const backgroundRating2 = 'linear-gradient(to bottom, #b4df5b 0%,#b4df5b 100%)';// Rating > 6 && <= 8
+  const backgroundRating3 = 'linear-gradient(to bottom, #299a0b 0%, #299a0b 100%)';// Rating > 8 && <= 9
+  const backgroundRating4 = 'linear-gradient(to bottom, #ff0084 0%,#ff0084 100%)';// Rating > 9
+  // Ustal tło w zależności od wartości ratingu
+  if (rating < 6) {
+    return backgroundRating1;
+  } else if (rating > 6 && rating <= 8) {
+    return backgroundRating2;
+  } else if (rating > 8 && rating <= 9) {
+    return backgroundRating3;
+  } else {
+    return backgroundRating4;
+  }
+}
 
 
 function initActions() {
@@ -34,8 +76,29 @@ function initActions() {
   const bookImages = document.querySelectorAll('.books-list .book__image');
 
   // Przejdź po każdym elemencie z tej listy
-  for (let i = 0; i < bookImages.length; i++) {
-    const bookImage = bookImages[i];
+  bookImages.forEach(bookImage => {
+    // Dodaj event listener dla podwójnego kliknięcia
+    bookImage.addEventListener('dblclick', function (event) {
+      event.preventDefault(); // Zapobiegamy domyślnemu zachowaniu (przewijaniu do góry strony)
+
+      // Sprawdź, czy kliknięty element zawiera się w kontenerze .book__image
+      if (event.target.offsetParent.classList.contains('book__image')) {
+        const bookId = event.target.offsetParent.dataset.id;
+
+        // Sprawdź, czy książka jest już ulubiona
+        const index = favoriteBooks.indexOf(bookId);
+        if (index === -1) {
+          // Jeśli książka nie jest ulubiona, dodaj ją do ulubionych i dodaj klasę favorite
+          favoriteBooks.push(bookId);
+          event.target.offsetParent.classList.add('favorite');
+        }
+      }
+
+      // Wyświetl aktualną listę ulubionych książek w konsoli
+      console.log('FavoriteBooks:', favoriteBooks);
+    });
+
+    // Dodaj event listener dla pojedynczego kliknięcia
     bookImage.addEventListener('click', function (event) {
       event.preventDefault(); // Zapobiegamy domyślnemu zachowaniu (przewijaniu do góry strony)
 
@@ -43,25 +106,22 @@ function initActions() {
       if (event.target.offsetParent.classList.contains('book__image')) {
         const bookId = event.target.offsetParent.dataset.id;
 
-
-        // Sprawdź, czy książka jest już ulubiona
+        // Sprawdź, czy książka jest ulubiona
         const index = favoriteBooks.indexOf(bookId);
         if (index !== -1) {
-          // Jeśli książka jest już ulubiona, usuń ją z ulubionych i usuń klasę favorite
+          // Jeśli książka jest ulubiona, usuń ją z ulubionych i usuń klasę favorite
           favoriteBooks.splice(index, 1);
           event.target.offsetParent.classList.remove('favorite');
-        } else {
-          // Jeśli książka nie jest ulubiona, dodaj ją do ulubionych i dodaj klasę favorite
-          favoriteBooks.push(bookId);
-          event.target.offsetParent.classList.add('favorite');
         }
-
-        // Wyświetl aktualną listę ulubionych książek w konsoli
-        console.log('FavoriteBooks:', favoriteBooks);
       }
+
+      // Wyświetl aktualną listę ulubionych książek w konsoli
+      console.log('FavoriteBooks:', favoriteBooks);
     });
-  }
+  });
 }
+
+
 
 const bookFiltred = document.querySelector('.filters');
 bookFiltred.addEventListener('click', function(event){
@@ -127,10 +187,7 @@ function filterBooks() {
 }
 
 
-
-
-
-
 // Wywołanie funkcji renderującej książki
 render();
 initActions();
+determineRatingBgc();
